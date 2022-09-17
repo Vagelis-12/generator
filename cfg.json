@@ -1,0 +1,36 @@
+{
+  "bridge": {
+    "name": "iason",
+    "version": "v3.0",
+    "statuskey": "SZ475@#356WDkvWD",
+    "erp": "Entersoft",
+    "statusview": "/Web_Scrolls/Web_Items_Simple",
+    "status_url": "status/check"
+  },
+  "eshop": {
+    "website": "iason.gr",
+    "postsecretkey": "SZ4#c22$#@##wfc#$$2c34s9WDk",
+    "websiteinput": "iason.gr/importer/"
+  },
+  "entersoft": {
+    "port": "",
+    "login_url": "https://api.entersoft.gr/api/login/login",
+    "public_query_url": "https://api.entersoft.gr/api/rpc/PublicQuery",
+    "SubscriptionID": "iason",
+    "SubscriptionPassword": "L0ul0ud1@",
+    "BridgeID": "001",
+    "DatabaseID": "",
+    "CompanyID": "",
+    "ModelBranchID": "01",
+    "ModelLangID": "en-US",
+    "ModelUserID": "B2BMaster",
+    "ModelPassword": "3$3#$23",
+    "Claims": "ecomprofessionalconnector"
+  },
+  "ftp": {
+    "user": "",
+    "pass": "",
+    "itemspath": "",
+    "website": ""
+  }
+}

@@ -1,230 +1,219 @@
+import sys
+import os
+import uuid
+import json
+import itertools
+import tkinter.messagebox
 from tkinter import *
 from tkinter import ttk
-import json
 from tkinter import filedialog
 from tkinter.filedialog import asksaveasfile
+from itertools import chain
 
-list_key = []
-list_value = []
-data=[]
 
+# Setup the root UI 
+root =Tk()
+root.title("Generator")
+root.configure(bg="gray89")
+root.columnconfigure(0, weight=1)
+root.rowconfigure(0, weight=1)
+root.state('zoomed')
+
+
+#Upload File
 def UploadAction(event=None):
     filename = filedialog.askopenfilename()
     print('Selected:', filename)
     return filename
 
+#Open File
 def OpenFile():
     with open(UploadAction()) as json_file:
         features = json.load(json_file)
-    
-    for key, value in features.items():
-        print("Primary key-",key,":")
-        for inkey in value.items():
-            print("The key is: ",inkey[0], "and the value is: ",inkey[1])
-            list_key.append(inkey[0])
-            list_value.append(inkey[1])
+        return features
 
-root = Tk()
-root.title('Generator')
-root.geometry("500x700")
+#Function to create the Tree  
+def json_tree(tree, parent, dictionary):
+    for key in dictionary:
+        uid = uuid.uuid4()
+        if isinstance(dictionary[key], dict):
+            tree.insert(parent, 'end', uid, text=key)
+            json_tree(tree, uid, dictionary[key])
+        else:
+            value = dictionary[key]
+            if value is None:
+                value = 'None'
+            tree.insert(parent, 'end', uid, values=(key,value))
+#Restart Program When Open Button Pressed
+def restart_program():
+     os.execl(sys.executable, sys.executable, *sys.argv)
 
+#Open Button
+open_button = Button(root, text='Open File', width=15,borderwidth = 1, bg="gray89", command=restart_program)
+open_button.pack(side=TOP)
 
 #Style
 style = ttk.Style()
-style.theme_use("default")
+style.theme_use("winnative")
+style.configure("Treeview", rowheight=45)
+style.configure("Treeview.Heading", background="gray89")	
 
-
-style.configure("Treeview", 
-	background="#D3D3D3",
-	foreground="black",
-	rowheight=25,
-	fieldbackground="#D3D3D3"
-	)
 # Change selected color
-style.map('Treeview', 
-	background=[('selected', 'blue')])
+style.map('Treeview',
+	background=[('selected', 'grey')],)
 
-# Create Treeview Frame
-tree_frame = Frame(root)
-tree_frame.pack(pady=20)
-
-# Treeview Scrollbar
-tree_scroll = Scrollbar(tree_frame)
-tree_scroll.pack(side=RIGHT, fill=Y)
-
-# Create Treeview
-my_tree = ttk.Treeview(tree_frame, yscrollcommand=tree_scroll.set, selectmode="extended")
-my_tree.pack()
-
-#Configure the scrollbar
-tree_scroll.config(command=my_tree.yview)
-
-# Define Our Columns
-my_tree['columns'] = ("Keys", "Values")
-
-# Formate Our Columns
-my_tree.column("#0", width=0, stretch=NO)
-my_tree.column("Keys", anchor=W, width=140)
-my_tree.column("Values", anchor=CENTER, width=140)
+# Setup the Frames
+tree_frame = ttk.Frame(root, padding="3")
+tree_frame.pack(pady=2)
 
 
-# Create Headings 
-my_tree.heading("#0", text="", anchor=W)
-my_tree.heading("Keys", text="Keys", anchor=W)
-my_tree.heading("Values", text="Values", anchor=CENTER)
-
-
-global count
-count=0
-# Add Data
-OpenFile()
-for num in range (len(list_key)):
-	data.append([list_key[num], list_value[num]])
-
-# Create striped row tags
-my_tree.tag_configure('oddrow', background="white")
-my_tree.tag_configure('evenrow', background="lightgrey")
-
-
-
-for record in data:
-	if count % 2 == 0:
-		my_tree.insert(parent='', index='end', iid=count, text="", values=(record[0], record[1]), tags=('evenrow',))
-	else:
-		my_tree.insert(parent='', index='end', iid=count, text="", values=(record[0], record[1]), tags=('oddrow',))
-
-	count += 1
-
-
-add_frame = Frame(root)
+add_frame = Frame(root,  bd = 0, bg="gray89")
 add_frame.pack(pady=20)
 
+# Setup the Tree
+tree = ttk.Treeview(tree_frame,columns=('Keys', 'Values'))
+tree.column('Keys', anchor=W, width=340)
+tree.column('Values', width=340, anchor='center')
+tree.heading('#0', text='Primary Keys')
+tree.heading('Keys', text='Keys', anchor=W)
+tree.heading('Values', text='Values')
+json_tree(tree, '', OpenFile())
+tree.pack(fill=BOTH, expand=1)
+
+
 #Labels
-nl = Label(add_frame, text="Keys")
-nl.grid(row=0, column=0)
+ol = Label(add_frame, text="Primary Keys", bg="gray89")
+ol.grid(row=0, column=0)
 
-il = Label(add_frame, text="Values")
-il.grid(row=0, column=1)
+nl = Label(add_frame, text="Keys", bg="gray89")
+nl.grid(row=0, column=1)
+
+il = Label(add_frame, text="Values", bg="gray89")
+il.grid(row=0, column=2)
 
 
-#Entry boxes
-keys_box = Entry(add_frame)
-keys_box.grid(row=1, column=0)
+#Entrys
+primary_box = Entry(add_frame, bg="LightCyan2")
+primary_box.focus_force()
+primary_box.grid(row=1, column=0)
 
-values_box = Entry(add_frame)
-values_box.grid(row=1, column=1)
+keys_box = Entry(add_frame, bg="LightCyan2")
+keys_box.focus_force()
+keys_box.grid(row=1, column=1)
 
-# Add Record
-def add_record():
-	my_tree.tag_configure('oddrow', background="white")
-	my_tree.tag_configure('evenrow', background="lightgrey")
-
-	global count
-	if count % 2 == 0:
-		my_tree.insert(parent='', index='end', iid=count, text="", values=(keys_box.get(), values_box.get()), tags=('evenrow',))
-	else:
-		my_tree.insert(parent='', index='end', iid=count, text="", values=(keys_box.get(), values_box.get()), tags=('oddrow',))
-
-	count += 1
-
-	# Clear the boxes
-	keys_box.delete(0, END)
-	values_box.delete(0, END)
-	
-
-# Remove one selected
-def remove_one():
-	x = my_tree.selection()[0]
-	my_tree.delete(x)
-
+values_box = Entry(add_frame, bg="LightCyan2")
+values_box.focus_force()
+values_box.grid(row=1, column=2)
 
 # Select Record
 def select_record():
-	
-	keys_box.delete(0, END)
-	values_box.delete(0, END)
+    
+    keys_box.delete(0, END)
+    values_box.delete(0, END)
+    primary_box.delete(0, END)
 
-	selected = my_tree.focus()
-	values = my_tree.item(selected, 'values')
+    selected = tree.focus()
+    values = tree.item(selected, 'values')
+    text = tree.item(selected, 'text')
 
-	
-	keys_box.insert(0, values[0])
-	values_box.insert(0, values[1])
+    primary_box.insert(0, text)
+    keys_box.insert(0, values[0])
+    values_box.insert(0, values[1])
 
 
+# Create Binding Click function
+def clicker(e):
+    select_record()
 
 # Save updated record
 def update_record():
-	selected = my_tree.focus()
-	my_tree.item(selected, text="", values=(keys_box.get(), values_box.get()))
+    selected = tree.focus()
+    tree.item(selected, text=(primary_box.get()), values=(keys_box.get(), values_box.get()))
 
-	
-	keys_box.delete(0, END)
-	values_box.delete(0, END)
-	
-# Create Binding Click function
-def clicker(e):
-	select_record()
+    primary_box.delete(0, END)
+    keys_box.delete(0, END)
+    values_box.delete(0, END)
+
+# Add Record
+def add_record():
+    tree.insert(parent=tree.parent(tree.focus()), index='end',text=primary_box.get(), values=(keys_box.get(), values_box.get()))
+  
+    # Clear the boxes
+    keys_box.delete(0, END)
+    values_box.delete(0, END)
+
+# Add Primary Key
+def add_primary():
+    uid = uuid.uuid4()
+    tree.insert('', '0', uid, text ='New Primary')
+    tree.insert(uid, 'end', text ='', value=('keys','values'))
 
 # Move Row up
 def up():
-	rows = my_tree.selection()
-	for row in rows:
-		my_tree.move(row, my_tree.parent(row), my_tree.index(row)-1)
+    rows = tree.selection()
+    for row in rows:
+        tree.move(row, tree.parent(row), tree.index(row)-1)
 
 # Move Row Down
 def down():
-	rows = my_tree.selection()
-	for row in reversed(rows):
-		my_tree.move(row, my_tree.parent(row), my_tree.index(row)+1)
+    rows = tree.selection()
+    for row in reversed(rows):
+        tree.move(row, tree.parent(row), tree.index(row)+1)	
 
-test = 1
-def writeToJSONFile(path, fileName, data):
-    json.dump(data, path)
+# Remove one selected
+def remove_one():
+    x = tree.selection()[0]
+    tree.delete(x)
+
+# Fuction running on submit()
+# Converting tree values to dict, convert dict to json
+def writeToJSONFile(path, fileName, output_dict):
+    json.dump(output_dict, path, indent=2 )
     path = './'
 
+output_dict={}
 def check():
-    data = []
-    files = [('JSON File', '*.json')]
-    fileName='new'
-    filepos = asksaveasfile(filetypes = files,defaultextension = json,initialfile='new')
-    writeToJSONFile(filepos, fileName, data)
+        for parent in tree.get_children():
+            par = tree.item(parent)["text"]
+            output_dict[par] = {}
+            for child in tree.get_children(parent):
+                data = tree.item(child)["values"]
+                output_dict[par][data[0]] = data[1]
         
-   
-   
-
-
+        files = [('JSON File', '*.json')]
+        fileName = 'new'
+        filepos = asksaveasfile(filetypes = files,defaultextension = json,initialfile='new')
+        writeToJSONFile(filepos, fileName, output_dict)
+        tkinter.messagebox.showinfo("", "Your file has been saved!")
 
 #Buttons
-move_up = Button(root, text="Move Up", command=up)
-move_up.pack(pady=2)
+update_button = Button(add_frame, text="Save Record",  width=15, borderwidth = 1 , bg="gray89", command=update_record)
+update_button.grid(row=2, column=2)
 
-move_down = Button(root, text="Move Down", command=down)
-move_down.pack(pady=2)
+remove_one = Button(add_frame, text="Delete Selected", width=15, borderwidth = 1 ,  bg="gray89", command=remove_one)
+remove_one.grid(row=3, column=2)
 
-select_button = Button(root, text="Select Record", command=select_record)
-select_button.pack(pady=2)
+add_record = Button(add_frame, text="Add Key/Value", width=15, borderwidth = 1 ,  bg="gray89", command=add_record)
+add_record.grid(row=2, column=0)
 
-update_button = Button(root, text="Save Record", command=update_record)
-update_button.pack(pady=2)
+move_up = Button(add_frame, text="Move Up", width=15, borderwidth = 1 , bg="gray89",command=up)
+move_up.grid(row=2, column=1)
 
-add_record = Button(root, text="Add Record", command=add_record)
-add_record.pack(pady=2)
+move_down = Button(add_frame, text="Move Down", width=15, borderwidth = 1 , bg="gray89", command=down)
+move_down.grid(row=3, column=1)
 
-remove_one = Button(root, text="Remove One Selected", command=remove_one)
-remove_one.pack(pady=2)
+add_primary_button = Button(add_frame, text="Add Primary Key",  width=15, borderwidth = 1 ,bg="gray89",command=add_primary)
+add_primary_button.grid(row=3, column=0)
 
-submit = Button(text='Submit', bg='green', fg='white',command=check)
-submit.pack(pady=2) 
-
-
-
-temp_label = Label(root, text="")
-temp_label.pack(pady=20)
+submit = Button(root,text='Submit', bg='green', fg='white', borderwidth = 1 , width=15, command=check)
+submit.pack(side=BOTTOM) 
 
 # Bindings
-#my_tree.bind("<Double-1>", clicker)
-my_tree.bind("<ButtonRelease-1>", clicker)
+tree.bind("<ButtonRelease-1>", clicker)
 
 
+# Limit windows minimum dimensions
+root.update_idletasks()
+root.minsize(800, 800)
 root.mainloop()
+
